@@ -3,7 +3,7 @@ const router = express.Router();
 const { Trainer, Data } = require('../models/data');
 const axios = require('axios');
 
-const api_base = "http://127.0.0.1:5000";
+const api_base = "https://cpr-backend.vercel.app/";
 
 
 router.get('/hello', (req, res) => {
