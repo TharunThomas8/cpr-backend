@@ -4,10 +4,13 @@ const app = express();
 const router = require('./routes/data');
 const connectDB = require('./db');
 const errorHandler = require('./errorhandler');
+const cors = require('cors');
+
 require('dotenv').config();
 
 
 // Middleware
+app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
