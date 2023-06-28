@@ -6,7 +6,9 @@ const axios = require('axios');
 const api_base = "http://127.0.0.1:5000";
 
 
-
+router.get('/hello', (req, res) => {
+  res.json({message:'Hello World!'});
+});
 // GET request to retrieve all data
 router.get('/get-all', (req, res) => {
   Data.find() // Add projection to include only the specified fields
