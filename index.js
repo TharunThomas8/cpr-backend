@@ -1,20 +1,15 @@
-// ajith
-// OYgO3wM0Op2kACKq
-
+// app.js
 const express = require('express');
 const app = express();
-const port = 5000;
 const router = require('./routes/data');
-const mongoose = require('mongoose');
+const connectDB = require('./db');
+const errorHandler = require('./errorhandler');
 
 // Middleware
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://ajitht:OYgO3wM0Op2kACKq@cluster0.9l7kqct.mongodb.net/', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+connectDB()
   .then(() => {
     console.log('Connected to MongoDB');
   })
@@ -25,7 +20,7 @@ mongoose.connect('mongodb+srv://ajitht:OYgO3wM0Op2kACKq@cluster0.9l7kqct.mongodb
 // Routes
 app.use('/', router);
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+// Error handling middleware
+app.use(errorHandler);
+
+module.exports = app;
