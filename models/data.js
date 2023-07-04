@@ -14,6 +14,7 @@ const cprDetailSchema = new Schema({
   cprFraction: Number,
   compression: Number,
   totalTime: Number,
+  breaths: Number,
   feedback: Boolean,
   createdAt: {
     type: Date,

@@ -19,14 +19,14 @@ router.get('/get-all', (req, res) => {
 
 // POST request to save a new message
 router.post('/save', (req, res) => {
-  const { userId, cprRate, cprFraction, compression, totalTime, feedback } = req.body;
+  const { userId, cprRate, cprFraction, compression, totalTime, breaths, feedback } = req.body;
 
   // Check if the user exists
   Data.findOne({ userId })
     .then((existingUser) => {
       if (existingUser) {
         // User exists, append the CPR detail
-        existingUser.cprDetails.push({ cprRate, cprFraction, compression, totalTime, feedback });
+        existingUser.cprDetails.push({ cprRate, cprFraction, compression, totalTime, breaths, feedback });
         existingUser
           .save()
           .then(() => {
@@ -41,7 +41,7 @@ router.post('/save', (req, res) => {
         // User does not exist, create a new row
         const newData = new Data({
           userId,
-          cprDetails: [{ cprRate, cprFraction, compression, totalTime, feedback }],
+          cprDetails: [{ cprRate, cprFraction, compression, totalTime, breaths, feedback }],
         });
         newData
           .save()
