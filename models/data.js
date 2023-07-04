@@ -15,6 +15,10 @@ const cprDetailSchema = new Schema({
   compression: Number,
   totalTime: Number,
   feedback: Boolean,
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const userSchema = new Schema({
