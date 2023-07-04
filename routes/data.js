@@ -5,10 +5,6 @@ const axios = require('axios');
 
 const api_base = "https://cpr-backend.vercel.app/";
 
-
-router.get('/hello', (req, res) => {
-  res.json({message:'Hello World!'});
-});
 // GET request to retrieve all data
 router.get('/get-all', (req, res) => {
   Data.find() // Add projection to include only the specified fields
@@ -23,18 +19,19 @@ router.get('/get-all', (req, res) => {
 
 // POST request to save a new message
 router.post('/save', (req, res) => {
-  const { userId, cprRate, cprFraction, compression, feedback } = req.body;
+  const { userId, cprRate, cprFraction, compression, totalTime, feedback } = req.body;
 
   // Check if the user exists
   Data.findOne({ userId })
     .then((existingUser) => {
       if (existingUser) {
         // User exists, append the CPR detail
-        existingUser.cprDetails.push({ cprRate, cprFraction, compression, feedback });
+        existingUser.cprDetails.push({ cprRate, cprFraction, compression, totalTime, feedback });
         existingUser
           .save()
           .then(() => {
             res.json({ success: true, message: 'Data saved successfully' });
+            // console.log(cprRate);
           })
           .catch((error) => {
             console.error('Error saving data:', error);
@@ -44,7 +41,7 @@ router.post('/save', (req, res) => {
         // User does not exist, create a new row
         const newData = new Data({
           userId,
-          cprDetails: [{ cprRate, cprFraction, compression, feedback }],
+          cprDetails: [{ cprRate, cprFraction, compression, totalTime, feedback }],
         });
         newData
           .save()

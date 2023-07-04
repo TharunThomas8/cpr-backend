@@ -13,6 +13,7 @@ const cprDetailSchema = new Schema({
   cprRate: Number,
   cprFraction: Number,
   compression: Number,
+  totalTime: Number,
   feedback: Boolean,
 });
 
