@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Trainer, Data } = require('../models/data');
+const { Trainer, Data, CPRDetail } = require('../models/data');
 const axios = require('axios');
 
 const api_base = "https://cpr-backend.vercel.app/";
@@ -19,19 +19,18 @@ router.get('/get-all', (req, res) => {
 
 // POST request to save a new message
 router.post('/save', (req, res) => {
-  const { userId, cprRate, cprFraction, compression, totalTime, breaths, feedback } = req.body;
+  const { userId, cprRate, cprFraction, compression, totalTime, breaths, feedback, reps } = req.body;
 
   // Check if the user exists
   Data.findOne({ userId })
     .then((existingUser) => {
       if (existingUser) {
         // User exists, append the CPR detail
-        existingUser.cprDetails.push({ cprRate, cprFraction, compression, totalTime, breaths, feedback });
+        existingUser.cprDetails.push({ cprRate, cprFraction, compression, totalTime, breaths, feedback, reps });
         existingUser
           .save()
           .then(() => {
             res.json({ success: true, message: 'Data saved successfully' });
-            // console.log(cprRate);
           })
           .catch((error) => {
             console.error('Error saving data:', error);
@@ -41,7 +40,7 @@ router.post('/save', (req, res) => {
         // User does not exist, create a new row
         const newData = new Data({
           userId,
-          cprDetails: [{ cprRate, cprFraction, compression, totalTime, breaths, feedback }],
+          cprDetails: [{ cprRate, cprFraction, compression, totalTime, breaths, feedback, reps }],
         });
         newData
           .save()

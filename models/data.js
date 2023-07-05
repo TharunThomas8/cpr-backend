@@ -20,6 +20,10 @@ const cprDetailSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  reps: [{
+    repNumber: Number,
+    repTime: Number
+  }],
 });
 
 const userSchema = new Schema({
