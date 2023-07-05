@@ -21,7 +21,6 @@ const cprDetailSchema = new Schema({
     default: Date.now,
   },
   reps: [{
-    repNumber: Number,
     repTime: Number
   }],
 });
