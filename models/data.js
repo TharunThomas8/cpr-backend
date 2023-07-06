@@ -21,7 +21,7 @@ const cprDetailSchema = new Schema({
     default: Date.now,
   },
   reps: [{
-    repTime: Number
+    type: Schema.Types.Mixed,
   }],
 });
 
