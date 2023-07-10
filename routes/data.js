@@ -17,11 +17,11 @@ router.get('/get-all', (req, res) => {
     });
 });
 
-// POST request to save a new message
+// POST request to save a session
 router.post('/save', (req, res) => {
   const { userId, cprRate, cprFraction, compression, totalTime, breaths, feedback, compOnly, reps } = req.body;
 
-  console.log('req.body', compOnly);
+  // console.log('req.body', compOnly);
   // Check if the user exists
   Data.findOne({ userId })
     .then((existingUser) => {
@@ -56,6 +56,92 @@ router.post('/save', (req, res) => {
     })
     .catch((error) => {
       console.error('Error checking user existence:', error);
+      res.status(500).json({ success: false, message: 'An error occurred' });
+    });
+});
+
+// POST request to save a game
+router.post('/save-game-details', (req, res) => {
+  const { userId, gameName, gameScore } = req.body;
+
+  // Check if the user exists
+  Data.findOne({ userId })
+    .then((existingUser) => {
+      if (existingUser) {
+        // User exists, append the game detail
+        existingUser.gameDetails.push({ gameName, gameScore });
+        existingUser
+          .save()
+          .then(() => {
+            res.json({ success: true, message: 'Game details saved successfully' });
+          })
+          .catch((error) => {
+            console.error('Error saving game details:', error);
+            res.status(500).json({ success: false, message: 'An error occurred' });
+          });
+      } else {
+        // User does not exist
+        res.status(404).json({ success: false, message: 'User not found' });
+      }
+    })
+    .catch((error) => {
+      console.error('Error checking user existence:', error);
+      res.status(500).json({ success: false, message: 'An error occurred' });
+    });
+});
+
+router.get('/get-top-score/:userId', (req, res) => {
+  const { userId } = req.params;
+
+  Data.findOne({ userId })
+    .sort({ 'gameDetails.gameScore': -1 }) // Sort in descending order based on gameScore
+    .select('gameDetails.gameScore') // Select only the gameScore field
+    .then((user) => {
+      if (user && user.gameDetails.length > 0) {
+        const topScore = user.gameDetails[0].gameScore;
+        res.json({ success: true, topScore });
+      } else {
+        res.status(404).json({ success: false, message: 'User or game details not found' });
+      }
+    })
+    .catch((error) => {
+      console.error('Error retrieving top score:', error);
+      res.status(500).json({ success: false, message: 'An error occurred' });
+    });
+});
+
+router.get('/get-recent-score/:userId', (req, res) => {
+  const { userId } = req.params;
+
+  Data.findOne({ userId })
+    .select({ gameDetails: { $slice: -1 } }) // Select the last element from the gameDetails array
+    .then((user) => {
+      if (user && user.gameDetails.length > 0) {
+        const recentScore = user.gameDetails[0];
+        res.json({ success: true, recentScore });
+      } else {
+        res.status(404).json({ success: false, message: 'User or game details not found' });
+      }
+    })
+    .catch((error) => {
+      console.error('Error retrieving recent score:', error);
+      res.status(500).json({ success: false, message: 'An error occurred' });
+    });
+});
+
+router.get('/get-top-scores', (req, res) => {
+  Data.aggregate([
+    { $unwind: '$gameDetails' }, // Unwind the gameDetails array
+    { $sort: { 'gameDetails.gameScore': -1 } }, // Sort in descending order based on gameScore
+    { $limit: 10 }, // Limit the result to 10 documents
+    { $group: { _id: '$userId', topScore: { $first: '$gameDetails' } } }, // Group by userId and select the first gameDetails as topScore
+    { $project: { _id: 0, userId: '$_id', topScore: 1 } }, // Project the fields to remove _id and rename _id to userId
+  ])
+    .then((topScores) => {
+      res.json({ success: true, topScores });
+    })
+    .catch((error) => {
+      console.error('Error retrieving top scores:', error);
       res.status(500).json({ success: false, message: 'An error occurred' });
     });
 });

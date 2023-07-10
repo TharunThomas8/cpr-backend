@@ -23,12 +23,22 @@ const cprDetailSchema = new Schema({
   },
   reps: [{
     type: Schema.Types.Mixed,
-  }],
+  }]
+});
+
+const gameDetailSchema = new Schema({
+  gameName: String,
+  gameScore: Number,
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const userSchema = new Schema({
   userId: String,
   cprDetails: [cprDetailSchema],
+  gameDetails: [gameDetailSchema],
   trainer: {
     type: Schema.Types.ObjectId,
     ref: 'Trainer'
