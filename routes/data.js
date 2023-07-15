@@ -20,13 +20,16 @@ router.get('/get-all', (req, res) => {
 // POST request to save a session
 router.post('/save', (req, res) => {
   const { userId, cprRate, cprFraction, compression, totalTime, breaths, feedback, compOnly, reps } = req.body;
-
+  if (cprRate === null){
+    cprRate = 0;
+  }
   // console.log('req.body', compOnly);
   // Check if the user exists
   Data.findOne({ userId })
     .then((existingUser) => {
       if (existingUser) {
         // User exists, append the CPR detail
+
         existingUser.cprDetails.push({ cprRate, cprFraction, compression, totalTime, breaths, feedback, compOnly, reps });
         existingUser
           .save()
