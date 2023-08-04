@@ -94,14 +94,17 @@ router.post('/save-game-details', (req, res) => {
 });
 
 router.get('/get-top-score/:userId', (req, res) => {
+  console.log('get-top-score');
   const { userId } = req.params;
 
   Data.findOne({ userId })
-    .sort({ 'gameDetails.gameScore': -1 }) // Sort in descending order based on gameScore
     .select('gameDetails.gameScore') // Select only the gameScore field
     .then((user) => {
       if (user && user.gameDetails.length > 0) {
-        const topScore = user.gameDetails[0].gameScore;
+        // Sort the gameDetails array in descending order by gameScore
+        const sortedGameDetails = user.gameDetails.sort((a, b) => b.gameScore - a.gameScore);
+        console.log(sortedGameDetails);
+        const topScore = sortedGameDetails[0].gameScore;
         res.json({ success: true, topScore });
       } else {
         res.status(404).json({ success: false, message: 'User or game details not found' });
@@ -112,6 +115,7 @@ router.get('/get-top-score/:userId', (req, res) => {
       res.status(500).json({ success: false, message: 'An error occurred' });
     });
 });
+
 
 router.get('/get-recent-score/:userId', (req, res) => {
   const { userId } = req.params;
