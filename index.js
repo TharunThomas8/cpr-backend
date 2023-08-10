@@ -1,4 +1,3 @@
-// app.js
 const express = require('express');
 const app = express();
 const router = require('./routes/data');
@@ -11,14 +10,11 @@ require('dotenv').config();
 
 // Middleware
 const corsOptions = {
-  origin: 'https://cpr-react.vercel.app', // Replace with your frontend's URL
+  origin: 'https://cpr-react.vercel.app',
 };
 
 app.use(cors(corsOptions));
-// app.use(cors());
 app.use(express.json());
-
-
 
 // Connect to MongoDB
 connectDB()

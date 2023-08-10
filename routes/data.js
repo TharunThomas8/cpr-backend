@@ -2,108 +2,97 @@ const express = require('express');
 const router = express.Router();
 const { Trainer, Data, CPRDetail } = require('../models/data');
 const axios = require('axios');
-
 const api_base = "https://cpr-backend.vercel.app/";
 
-// GET request to retrieve all data
+// Get all data
 router.get('/get-all', (req, res) => {
-  Data.find() // Add projection to include only the specified fields
+  Data.find()
     .then((data) => {
       res.json({ success: true, data });
     })
     .catch((error) => {
-      console.error('Error retrieving messages:', error);
+      console.error(error);
       res.status(500).json({ success: false, message: 'An error occurred' });
     });
 });
 
-// POST request to save a session
+// Save CPR session data
 router.post('/save', (req, res) => {
   const { userId, cprRate, cprFraction, compression, totalTime, breaths, feedback, compOnly, reps } = req.body;
-  if (cprRate === null){
+  if (cprRate === null) {
     cprRate = 0;
   }
-  // console.log('req.body', compOnly);
-  // Check if the user exists
+
   Data.findOne({ userId })
     .then((existingUser) => {
       if (existingUser) {
-        // User exists, append the CPR detail
-
         existingUser.cprDetails.push({ cprRate, cprFraction, compression, totalTime, breaths, feedback, compOnly, reps });
-        existingUser
-          .save()
+        existingUser.save()
           .then(() => {
             res.json({ success: true, message: 'Data saved successfully' });
           })
           .catch((error) => {
-            console.error('Error saving data:', error);
+            console.error(error);
             res.status(500).json({ success: false, message: 'An error occurred' });
           });
       } else {
-        // User does not exist, create a new row
         const newData = new Data({
           userId,
           cprDetails: [{ cprRate, cprFraction, compression, totalTime, breaths, feedback, compOnly, reps }],
         });
-        newData
-          .save()
+        newData.save()
           .then(() => {
             res.json({ success: true, message: 'Data saved successfully' });
           })
           .catch((error) => {
-            console.error('Error saving data:', error);
+            console.error(error);
             res.status(500).json({ success: false, message: 'An error occurred' });
           });
       }
     })
     .catch((error) => {
-      console.error('Error checking user existence:', error);
+      console.error(error);
       res.status(500).json({ success: false, message: 'An error occurred' });
     });
 });
 
-// POST request to save a game
+// Save game details
+
 router.post('/save-game-details', (req, res) => {
   const { userId, gameName, gameScore } = req.body;
 
-  // Check if the user exists
   Data.findOne({ userId })
     .then((existingUser) => {
       if (existingUser) {
-        // User exists, append the game detail
         existingUser.gameDetails.push({ gameName, gameScore });
-        existingUser
-          .save()
+        existingUser.save()
           .then(() => {
             res.json({ success: true, message: 'Game details saved successfully' });
           })
           .catch((error) => {
-            console.error('Error saving game details:', error);
+            console.error(error);
             res.status(500).json({ success: false, message: 'An error occurred' });
           });
       } else {
-        // User does not exist
         res.status(404).json({ success: false, message: 'User not found' });
       }
     })
     .catch((error) => {
-      console.error('Error checking user existence:', error);
+      console.error(error);
       res.status(500).json({ success: false, message: 'An error occurred' });
     });
 });
 
+// Get the top game score for a user
+
 router.get('/get-top-score/:userId', (req, res) => {
-  console.log('get-top-score');
   const { userId } = req.params;
 
   Data.findOne({ userId })
-    .select('gameDetails.gameScore') // Select only the gameScore field
+    .select('gameDetails.gameScore')
     .then((user) => {
       if (user && user.gameDetails.length > 0) {
-        // Sort the gameDetails array in descending order by gameScore
         const sortedGameDetails = user.gameDetails.sort((a, b) => b.gameScore - a.gameScore);
-        console.log(sortedGameDetails);
         const topScore = sortedGameDetails[0].gameScore;
         res.json({ success: true, topScore });
       } else {
@@ -111,17 +100,18 @@ router.get('/get-top-score/:userId', (req, res) => {
       }
     })
     .catch((error) => {
-      console.error('Error retrieving top score:', error);
+      console.error(error);
       res.status(500).json({ success: false, message: 'An error occurred' });
     });
 });
 
+// Get the most recent game score for a user
 
 router.get('/get-recent-score/:userId', (req, res) => {
   const { userId } = req.params;
 
   Data.findOne({ userId })
-    .select({ gameDetails: { $slice: -1 } }) // Select the last element from the gameDetails array
+    .select({ gameDetails: { $slice: -1 } })
     .then((user) => {
       if (user && user.gameDetails.length > 0) {
         const recentScore = user.gameDetails[0];
@@ -131,29 +121,32 @@ router.get('/get-recent-score/:userId', (req, res) => {
       }
     })
     .catch((error) => {
-      console.error('Error retrieving recent score:', error);
+      console.error(error);
       res.status(500).json({ success: false, message: 'An error occurred' });
     });
 });
 
+// Get the top game scores across all users
+
 router.get('/get-top-scores', (req, res) => {
   Data.aggregate([
-    { $unwind: '$gameDetails' }, // Unwind the gameDetails array
-    { $sort: { 'gameDetails.gameScore': -1 } }, // Sort in descending order based on gameScore
-    { $limit: 10 }, // Limit the result to 10 documents
-    { $group: { _id: '$userId', topScore: { $first: '$gameDetails' } } }, // Group by userId and select the first gameDetails as topScore
-    { $project: { _id: 0, userId: '$_id', topScore: 1 } }, // Project the fields to remove _id and rename _id to userId
+    { $unwind: '$gameDetails' },
+    { $sort: { 'gameDetails.gameScore': -1 } },
+    { $limit: 10 },
+    { $group: { _id: '$userId', topScore: { $first: '$gameDetails' } } },
+    { $project: { _id: 0, userId: '$_id', topScore: 1 } },
   ])
     .then((topScores) => {
       res.json({ success: true, topScores });
     })
     .catch((error) => {
-      console.error('Error retrieving top scores:', error);
+      console.error(error);
       res.status(500).json({ success: false, message: 'An error occurred' });
     });
 });
 
-// GET request to retrieve data for a specific user
+// Get data for a specific user
+
 router.get('/get-user-data/:userId', (req, res) => {
   const { userId } = req.params;
 
@@ -166,10 +159,12 @@ router.get('/get-user-data/:userId', (req, res) => {
       }
     })
     .catch((error) => {
-      console.error('Error retrieving data:', error);
+      console.error(error);
       res.status(500).json({ success: false, message: 'An error occurred' });
     });
 });
+
+// Create a new user
 
 router.post('/create-user', (req, res) => {
   const { userId } = req.body;
@@ -186,16 +181,18 @@ router.post('/create-user', (req, res) => {
             res.json({ success: true, message: 'User created successfully' });
           })
           .catch((error) => {
-            console.error('Error creating user:', error);
+            console.error(error);
             res.status(500).json({ success: false, message: 'An error occurred' });
           });
       }
     })
     .catch((error) => {
-      console.error('Error finding user:', error);
+      console.error(error);
       res.status(500).json({ success: false, message: 'An error occurred' });
     });
 });
+
+// Get the last few CPR details for a user
 
 router.get('/get-last/:userId', (req, res) => {
   const { userId } = req.params;
@@ -210,15 +207,15 @@ router.get('/get-last/:userId', (req, res) => {
       }
     })
     .catch((error) => {
-      console.error('Error retrieving CPR details:', error);
+      console.error(error);
       res.status(500).json({ success: false, message: 'An error occurred' });
     });
 });
 
 // Create a new trainer
+
 router.post('/create-trainer', (req, res) => {
   const { trainerId, name } = req.body;
-
   const newTrainer = new Trainer({ trainerId, name });
 
   newTrainer.save()
@@ -226,32 +223,12 @@ router.post('/create-trainer', (req, res) => {
       res.json({ success: true, message: 'Trainer created successfully' });
     })
     .catch((error) => {
-      console.error('Error creating trainer:', error);
+      console.error(error);
       res.status(500).json({ success: false, message: 'An error occurred' });
     });
 });
 
-// // Add a user to a trainer
-// router.post('/add-user', (req, res) => {
-//   const { trainerId, userId } = req.body;
-
-//   Trainer.findOneAndUpdate(
-//     { trainerId },
-//     { $addToSet: { userIds: userId } }, // Add userId to the trainer's userIds array
-//     { new: true }
-//   )
-//     .then((trainer) => {
-//       if (trainer) {
-//         res.json({ success: true, message: 'User added to trainer successfully' });
-//       } else {
-//         res.status(404).json({ success: false, message: 'Trainer not found' });
-//       }
-//     })
-//     .catch((error) => {
-//       console.error('Error adding user to trainer:', error);
-//       res.status(500).json({ success: false, message: 'An error occurred' });
-//     });
-// });
+// Add a user to a trainer's list
 
 router.post('/add-user', (req, res) => {
   const { trainerId, userId } = req.body;
@@ -277,7 +254,7 @@ router.post('/add-user', (req, res) => {
                   }
                 })
                 .catch((error) => {
-                  console.error('Error creating user:', error);
+                  console.error(error);
                   res.status(500).json({ success: false, message: 'An error occurred' });
                 });
             } else {
@@ -285,23 +262,24 @@ router.post('/add-user', (req, res) => {
             }
           })
           .catch((error) => {
-            console.error('Error adding user to trainer:', error);
+            console.error(error);
             res.status(500).json({ success: false, message: 'An error occurred' });
           });
       }
     })
     .catch((error) => {
-      console.error('Error finding user:', error);
+      console.error(error);
       res.status(500).json({ success: false, message: 'An error occurred' });
     });
 });
 
-// Get users for a trainer
+// Get all users associated with a trainer
+
 router.get('/get-users/:trainerId', (req, res) => {
   const { trainerId } = req.params;
 
   Trainer.findOne({ trainerId })
-    .populate('userIds', 'userId') // Populate the userIds field and include only the userId field in the response
+    .populate('userIds', 'userId')
     .then((trainer) => {
       if (trainer) {
         res.json({ success: true, users: trainer.userIds });
@@ -310,10 +288,9 @@ router.get('/get-users/:trainerId', (req, res) => {
       }
     })
     .catch((error) => {
-      console.error('Error retrieving users for trainer:', error);
+      console.error(error);
       res.status(500).json({ success: false, message: 'An error occurred' });
     });
 });
-
 
 module.exports = router;

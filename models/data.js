@@ -5,8 +5,7 @@ const Schema = mongoose.Schema;
 const trainerSchema = new Schema({
   trainerId: String,
   name: String,
-  userIds: [String], // Array of user IDs associated with the trainer
-  // Other trainer fields
+  userIds: [String],
 });
 
 const cprDetailSchema = new Schema({
